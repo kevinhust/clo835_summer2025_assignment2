@@ -1,0 +1,11 @@
+# Namespace for webapp
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: webapp
+---
+# Namespace for mysql
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mysql

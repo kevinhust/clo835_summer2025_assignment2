@@ -1,0 +1,36 @@
+# WebApp Deployment - Version 2 (for rolling update)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-deployment
+  namespace: webapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: employees
+  template:
+    metadata:
+      labels:
+        app: employees
+    spec:
+      containers:
+      - name: webapp
+        image: 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835ecr-webapp:v2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DBHOST
+          value: "mysql-service.mysql.svc.cluster.local"
+        - name: DBUSER
+          value: "root"
+        - name: DBPWD
+          value: "passwors"
+        - name: DATABASE
+          value: "employees"
+        - name: DBPORT
+          value: "3306"
+        - name: APP_COLOR
+          value: "blue"
+      imagePullSecrets:
+      - name: ecr-secret

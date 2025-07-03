@@ -1,0 +1,29 @@
+# WebApp Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-pod
+  namespace: webapp
+  labels:
+    app: webapp
+spec:
+  containers:
+  - name: webapp
+    image: 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835ecr-webapp:latest
+    ports:
+    - containerPort: 8080
+    env:
+    - name: DBHOST
+      value: "mysql-service.mysql.svc.cluster.local"
+    - name: DBUSER
+      value: "root"
+    - name: DBPWD
+      value: "passwors"
+    - name: DATABASE
+      value: "employees"
+    - name: DBPORT
+      value: "3306"
+    - name: APP_COLOR
+      value: "lime"
+  imagePullSecrets:
+  - name: ecr-secret

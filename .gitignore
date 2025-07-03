@@ -1,1 +1,7 @@
 terraform/.terraform/
+.serena/
+CLAUDE.MD
+DEMO_SCRIPT.MD
+DEPLOYMENT_PLAN.MD
+COMMANDS_REFERENCE.MD
+Assignment2.MD

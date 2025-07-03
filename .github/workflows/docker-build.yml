@@ -5,6 +5,13 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Version tag for the docker images (e.g., v2, latest)'
+        required: false
+        default: 'latest'
+        type: string
 
 jobs:
   build:
@@ -33,7 +40,9 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.ECR_WEBAPP_URI }}:latest
+        tags: |
+          ${{ secrets.ECR_WEBAPP_URI }}:latest
+          ${{ secrets.ECR_WEBAPP_URI }}:${{ github.event.inputs.version_tag || 'latest' }}
 
     - name: Build and push MySQL image
       uses: docker/build-push-action@v4
@@ -41,4 +50,6 @@ jobs:
         context: .
         file: ./Dockerfile_mysql
         push: true
-        tags: ${{ secrets.ECR_MYSQL_URI }}:latest
+        tags: |
+          ${{ secrets.ECR_MYSQL_URI }}:latest
+          ${{ secrets.ECR_MYSQL_URI }}:${{ github.event.inputs.version_tag || 'latest' }}

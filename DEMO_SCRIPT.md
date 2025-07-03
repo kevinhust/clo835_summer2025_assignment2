@@ -1,9 +1,10 @@
 # Assignment 2 - 演示录制脚本
 
 ## 录制前准备
+- 确保Terraform已部署基础设施 (EC2实例自动安装了kubectl和kind)
+- 确认GitHub Actions已成功构建并推送ECR镜像
 - 确保Kind集群已运行
 - 准备好所有K8s manifest文件
-- 确认ECR镜像已推送
 - 测试所有命令可正常执行
 
 ---
@@ -11,13 +12,13 @@
 ## 演示脚本 (按Assignment要求顺序)
 
 ### 开场白 (30秒)
-"大家好，我是[姓名]，今天为大家演示Assignment 2 - 在Kind集群中部署容器化应用。我将按照要求逐步展示K8s资源的部署和管理过程。"
+"大家好，我是[姓名]，今天为大家演示Assignment 2 - 在Kind集群中部署容器化应用。我已使用Terraform自动部署了基础设施，包括EC2实例、ECR仓库等，并通过GitHub Actions自动构建了容器镜像。现在我将展示K8s资源的部署和管理过程。"
 
 ---
 
 ### 1. 演示K8s集群运行状态 (2分钟)
 
-**[说明]**: "首先，让我展示本地Kind集群的运行状态，这是一个单节点集群运行在Amazon EC2实例上。"
+**[说明]**: "首先，让我展示本地Kind集群的运行状态，这是一个单节点集群运行在由Terraform自动部署的Amazon EC2实例上，kubectl和kind已通过user data脚本自动安装。"
 
 ```bash
 # 1.1 显示集群信息
@@ -37,13 +38,13 @@ echo "=== K8s API Server 信息 ==="
 kubectl cluster-info | grep "control plane"
 ```
 
-**[口述]**: "可以看到我们的Kind集群正在正常运行，这是一个单节点集群，所有K8s核心组件包括API Server、etcd、scheduler等都在运行中。API Server的IP地址是[读出显示的IP地址]，这个信息我会在报告中详细说明。"
+**[口述]**: "可以看到我们的Kind集群正在正常运行，这是一个单节点集群运行在Terraform自动部署的EC2实例上，所有K8s核心组件包括API Server、etcd、scheduler等都在运行中。API Server的IP地址是[读出显示的IP地址]，这个信息我会在报告中详细说明。"
 
 ---
 
 ### 2. 部署MySQL和Web应用Pod (3分钟)
 
-**[说明]**: "现在我将在各自的namespace中部署MySQL和Web应用的Pod。"
+**[说明]**: "现在我将在各自的namespace中部署MySQL和Web应用的Pod。镜像已通过GitHub Actions自动构建并推送到ECR。"
 
 ```bash
 # 2.1 创建命名空间
@@ -52,8 +53,7 @@ kubectl apply -f k8s-manifests/namespaces.yaml
 kubectl get namespaces
 
 # 2.2 创建ECR pull secrets
-echo "=== 创建ECR认证secrets ==="
-# 注意：实际演示时需要替换为真实的ECR token
+echo "=== 创建ECR认证secrets (使用GitHub Actions推送的镜像) ==="
 ECR_TOKEN=$(aws ecr get-login-password --region us-east-1)
 
 kubectl create secret docker-registry ecr-secret \
@@ -260,14 +260,37 @@ kubectl describe svc webapp-service -n webapp | head -10
 
 ---
 
-### 9. 总结和清理 (1分钟)
+### 9. 演示GitHub Actions手动触发 (1分钟)
+
+**[说明]**: "最后我来演示如何手动触发GitHub Actions工作流来构建新版本的镜像。"
 
 ```bash
-# 9.1 最终状态检查
-echo "=== 9. 最终部署状态总结 ==="
+# 9.1 显示当前GitHub Actions状态
+echo "=== 9. GitHub Actions自动化演示 ==="
+echo "GitHub Actions工作流支持以下触发方式："
+echo "- 自动触发: push/PR到main分支"
+echo "- 手动触发: workflow_dispatch事件"
+echo ""
+echo "手动触发步骤："
+echo "1. 访问GitHub仓库的Actions页面"
+echo "2. 选择'Build and Push WebApp and MySQL Docker Images'工作流"
+echo "3. 点击'Run workflow'按钮"
+echo "4. 可选择指定版本标签 (如v2, v3等)"
+echo "5. 自动构建并推送到ECR"
+```
+
+**[口述]**: "这里我展示了GitHub Actions的自动化流程。每次代码push到main分支时，工作流会自动构建和推送Docker镜像到ECR。另外，我们也可以手动触发工作流并指定自定义的版本标签，这对于版本管理和滚动更新非常有用。"
+
+---
+
+### 10. 总结和清理 (1分钟)
+
+```bash
+# 10.1 最终状态检查
+echo "=== 10. 最终部署状态总结 ==="
 kubectl get all -A
 
-# 9.2 演示结束
+# 10.2 演示结束
 echo "=== 演示完成 ==="
 echo "所有Assignment 2要求的任务已经完成："
 echo "✓ 单节点Kind集群运行正常"
@@ -279,7 +302,7 @@ echo "✓ 应用滚动更新成功"
 echo "✓ 应用连接性和日志验证完成"
 ```
 
-**[口述]**: "演示到此结束。我已经完成了Assignment 2的所有要求：部署了单节点K8s集群，创建了各种K8s资源，演示了应用的连接性和日志记录，执行了滚动更新，并解释了不同Service类型的使用原因。所有的K8s manifest文件都已上传到GitHub仓库，感谢观看。"
+**[口述]**: "演示到此结束。我已经完成了Assignment 2的所有要求：使用Terraform自动部署了基础设施，通过GitHub Actions自动化了容器镜像构建，部署了单节点K8s集群，创建了各种K8s资源，演示了应用的连接性和日志记录，执行了滚动更新，并解释了不同Service类型的使用原因。整个过程高度自动化，提高了部署效率和一致性。感谢观看。"
 
 ---
 

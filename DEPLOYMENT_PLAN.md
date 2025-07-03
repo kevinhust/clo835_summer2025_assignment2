@@ -2,62 +2,65 @@
 
 ## 前期准备工作
 
-### 1. 基础设施部署 (使用Terraform - 不包含在提交中)
-- [ ] 部署Amazon EC2实例 (Amazon Linux)
-- [ ] 配置VPC和安全组
-- [ ] 创建ECR仓库
-
-### 2. EC2实例配置
+### 1. 基础设施部署 (使用Terraform - 自动化)
 ```bash
-# 2.1 更新系统
-sudo yum update -y
+# 1.1 进入terraform目录
+cd terraform
 
-# 2.2 安装Docker
-sudo yum install -y docker
-sudo systemctl start docker
-sudo systemctl enable docker
-sudo usermod -a -G docker ec2-user
+# 1.2 初始化Terraform
+terraform init
 
-# 2.3 安装kubectl
-curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.27.1/2023-04-19/bin/linux/amd64/kubectl
-chmod +x ./kubectl
-sudo mv ./kubectl /usr/local/bin
+# 1.3 检查部署计划
+terraform plan
 
-# 2.4 安装kind
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
-chmod +x ./kind
-sudo mv ./kind /usr/local/bin
-
-# 2.5 安装AWS CLI (如果需要)
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
+# 1.4 部署基础设施
+terraform apply
 ```
 
-### 3. ECR认证和镜像推送
+**Terraform自动创建的资源**:
+- [ ] Amazon EC2实例 (Amazon Linux, 20GB存储)
+- [ ] VPC和公有子网
+- [ ] 安全组 (SSH, K8s NodePort, API Server)
+- [ ] ECR仓库 (webapp, mysql)
+- [ ] IAM实例配置文件关联
+
+**EC2 User Data自动安装的组件**:
+- [ ] Docker和docker-compose
+- [ ] kubectl (最新稳定版)
+- [ ] kind (v0.20.0)
+- [ ] AWS CLI
+- [ ] MySQL客户端
+- [ ] Git
+
+### 2. 容器镜像构建 (使用GitHub Actions - 自动化)
+
+**自动触发方式**:
+- 代码push到main分支
+- Pull request到main分支
+
+**手动触发方式**:
 ```bash
-# 3.1 ECR登录
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 039444453392.dkr.ecr.us-east-1.amazonaws.com
-
-# 3.2 构建并推送镜像
-# WebApp镜像
-docker build -t clo835ecr-webapp .
-docker tag clo835ecr-webapp:latest 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835ecr-webapp:latest
-docker tag clo835ecr-webapp:latest 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835ecr-webapp:v2
-docker push 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835ecr-webapp:latest
-docker push 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835ecr-webapp:v2
-
-# MySQL镜像
-docker build -f Dockerfile_mysql -t clo835ecr-mysql .
-docker tag clo835ecr-mysql:latest 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835ecr-mysql:latest
-docker push 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835ecr-mysql:latest
+# 在GitHub网页上：
+# 1. 进入Actions标签页
+# 2. 选择"Build and Push WebApp and MySQL Docker Images"工作流
+# 3. 点击"Run workflow"按钮
+# 4. 可选择输入版本标签 (如: v2, latest)
+# 5. 点击"Run workflow"开始构建
 ```
+
+**GitHub Actions自动执行**:
+- [ ] 检出代码
+- [ ] 配置AWS认证
+- [ ] 登录ECR
+- [ ] 构建WebApp镜像
+- [ ] 构建MySQL镜像  
+- [ ] 推送镜像到ECR (latest + 指定版本标签)
 
 ## Kind集群部署
 
-### 4. 创建Kind集群
+### 3. 创建Kind集群
 ```bash
-# 4.1 创建集群配置文件
+# 3.1 创建集群配置文件
 cat <<EOF > kind-config.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
